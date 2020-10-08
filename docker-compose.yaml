@@ -12,8 +12,9 @@ services:
   python:
     build:
       context: ./docker/python
+    command: uvicorn api:app --host 0.0.0.0 --port 8080
     ports: 
-      - "8080"
+      - "8080:8080"
     volumes:
       - .:/code
     depends_on:
