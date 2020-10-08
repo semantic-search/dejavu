@@ -6,7 +6,7 @@ from dejavu.logic.recognizer.file_recognizer import FileRecognizer
 
 import json
 import os
-import numpy
+import numpy as np
 
 CNF_FILE = "postgres.cnf.json"
 UPLOAD_DIR = "upload_dir/"
@@ -32,9 +32,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-def convert(o):
-    if isinstance(o, numpy.int64): return int(o)  
-    raise TypeError
+class NumpyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        if isinstance(obj, np.integer):
+            return int(obj)
+        if isinstance(obj, np.floating):
+            return float(obj)
+        if isinstance(obj, bytes):
+            return obj.decode('utf8')
+        return json.JSONEncoder.default(self, obj)
 
 @app.get('/hello')
 def hello():
@@ -62,7 +70,8 @@ def post(file: UploadFile = File(...)):
         f.write(file.file.read())
     results = djv.recognize(FileRecognizer, file_name)
     os.remove(file_name)
-    return json.dumps(results, default=convert)
+    print(results)
+    return json.dumps(results, cls=NumpyEncoder)
 
 
  
