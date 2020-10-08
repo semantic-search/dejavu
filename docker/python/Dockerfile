@@ -8,5 +8,5 @@ RUN pip install numpy scipy matplotlib pydub pyaudio psycopg2
 
 COPY requirements.txt requirements.txt
 RUN pip install -r requirements.txt
-
-WORKDIR /code
+COPY . ./
+CMD uvicorn --host=0.0.0.0 --port 8080 main:app
