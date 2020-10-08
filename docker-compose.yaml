@@ -11,7 +11,8 @@ services:
       - db_network
   python:
     build:
-      dockerfile: ./docker/python
+      context: ./
+      dockerfile: ./docker/python/Dockerfile
     command: uvicorn api:app --host 0.0.0.0 --port 8080
     ports: 
       - "8080:8080"
