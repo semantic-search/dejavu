@@ -12,6 +12,8 @@ services:
   python:
     build:
       context: ./docker/python
+    ports: 
+      - "8080"
     volumes:
       - .:/code
     depends_on:
