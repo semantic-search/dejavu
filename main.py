@@ -35,9 +35,10 @@ def register(file: UploadFile = File(...)):
     file_name = file.filename
     with open(file_name, 'wb') as f:
         f.write(file.file.read())
-    djv.fingerprint_file(file_name)
+    print(file_name)
+    djv.fingerprint_file(str(file_name))
     os.remove(file_name)
-
+    return True
 
 @app.post("/find/")
 def post(file: UploadFile = File(...)):
