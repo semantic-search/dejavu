@@ -31,13 +31,22 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get('/hello')
+def hello():
+    """Test endpoint"""
+    return {'hello': 'world'}
+
 @app.post("/index/")
 def register(file: UploadFile = File(...)):
     file_name = UPLOAD_DIR + file.filename
     with open(file_name, 'wb') as f:
         f.write(file.file.read())
     print(file_name)
-    djv.fingerprint_file(str(file_name))
+
+    file_extension = os.path.splitext(file_name)[1]
+    print(file_extension, "file_ext")
+    djv.fingerprint_directory(UPLOAD_DIR, [file_extension])
+    # djv.fingerprint_file(str(file_name))
     os.remove(file_name)
     return True
 
