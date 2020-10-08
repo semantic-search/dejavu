@@ -8,6 +8,7 @@ import json
 import os
 
 CNF_FILE = "postgres.cnf.json"
+UPLOAD_DIR = "upload_dir/"
 
 with open(CNF_FILE, 'r') as f:
     config = json.load(f)
@@ -32,7 +33,7 @@ app.add_middleware(
 
 @app.post("/index/")
 def register(file: UploadFile = File(...)):
-    file_name = file.filename
+    file_name = UPLOAD_DIR + file.filename
     with open(file_name, 'wb') as f:
         f.write(file.file.read())
     print(file_name)
@@ -42,7 +43,7 @@ def register(file: UploadFile = File(...)):
 
 @app.post("/find/")
 def post(file: UploadFile = File(...)):
-    file_name = file.filename
+    file_name = UPLOAD_DIR + file.filename
     with open(file_name, 'wb') as f:
         f.write(file.file.read())
     results = djv.recognize(FileRecognizer, file_name)

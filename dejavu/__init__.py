@@ -129,6 +129,7 @@ class Dejavu:
         song_name_from_path = decoder.get_audio_name_from_path(file_path)
         song_hash = decoder.unique_hash(file_path)
         song_name = song_name or song_name_from_path
+        print(f"songName {song_name}")
         # don't refingerprint already fingerprinted files
         if song_hash in self.songhashes_set:
             print(f"{song_name} already fingerprinted, continuing...")
