@@ -1,3 +1,5 @@
+from db_models.mongo_setup import global_init
+from db_models.models.cache_model import Cache
 from indexing_service import index_audio
 from fastapi import FastAPI, File, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
@@ -9,6 +11,7 @@ import json
 import os
 import numpy as np
 
+global_init()
 CNF_FILE = "postgres.cnf.json"
 UPLOAD_DIR = "upload_dir/"
 
@@ -68,6 +71,27 @@ def post(file: UploadFile = File(...)):
     results = djv.recognize(FileRecognizer, file_name)
     os.remove(file_name)
     print(results)
+
+    try:
+        results_array = results["results"]
+        first_song = results_array[0]
+
+        song_pk = first_song["song_name"].decode()
+
+        print("here 1", song_pk)
+        try:
+            db_object = Cache.objects.get(pk=song_pk)
+            file_name = db_object.file_name
+            results["data"] = {
+                "file_name": file_name,
+                "file_id": song_pk
+            }
+        except:
+            print("EXCEPTION IN GET PK process")
+
+    except AttributeError:
+        print("No song in response")
+
     return json.dumps(results, cls=NumpyEncoder)
 
 
