@@ -3,7 +3,8 @@ from db_models.mongo_setup import global_init
 from db_models.models.cache_model import Cache
 import init
 import globals
-import requests
+import os
+import requests 
 
 UPLOAD_DIR = "upload_dir/"
 
@@ -35,9 +36,10 @@ if __name__ == "__main__":
             print("EXCEPTION IN GET PK... continue")
             continue
 
-        # file_name = db_object.file_name
+        db_file_name = db_object.file_name
+        file_extension = os.path.splitext(db_file_name)[1]
         # USING PK as file name to retrive it later in search api
-        file_name = str(db_key)
+        file_name = str(db_key) + file_extension
         
         print("#############################################")
         print("########## PROCESSING FILE " + file_name)

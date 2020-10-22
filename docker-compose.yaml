@@ -9,12 +9,28 @@ services:
       - POSTGRES_PASSWORD=password
     networks:
       - db_network
-  python:
+  api:
     build:
       context: ./
       dockerfile: ./docker/python/Dockerfile
+    command: uvicorn --host=0.0.0.0 --port 8080 api:app --reload
+    env_file:
+      - .env
     ports: 
       - "8080:8080"
+    volumes:
+      - .:/code
+    depends_on:
+      - db
+    networks:
+      - db_network
+  kafka-consumer:
+    build:
+      context: ./
+      dockerfile: ./docker/python/Dockerfile
+    command: python main.py
+    env_file:
+      - .env
     volumes:
       - .:/code
     depends_on:
