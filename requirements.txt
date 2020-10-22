@@ -9,3 +9,8 @@ psycopg2==2.8.3
 fastapi
 python-multipart
 uvicorn
+
+kafka-python
+redis
+python-dotenv
+mongoengine

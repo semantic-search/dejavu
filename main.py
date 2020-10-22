@@ -1,77 +1,58 @@
-from fastapi import FastAPI, File, UploadFile, Form
-from fastapi.middleware.cors import CORSMiddleware
+from indexing_service import index_audio
+from db_models.mongo_setup import global_init
+from db_models.models.cache_model import Cache
+import init
+import globals
+import requests
 
-from dejavu import Dejavu
-from dejavu.logic.recognizer.file_recognizer import FileRecognizer
-
-import json
-import os
-import numpy as np
-
-CNF_FILE = "postgres.cnf.json"
 UPLOAD_DIR = "upload_dir/"
 
-with open(CNF_FILE, 'r') as f:
-    config = json.load(f)
+global_init()
 
-# create a Dejavu instance
-djv = Dejavu(config)
-
- 
-app = FastAPI()
-
-origins = [
-    "http://localhost:3000"
-]
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-class NumpyEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, np.ndarray):
-            return obj.tolist()
-        if isinstance(obj, np.integer):
-            return int(obj)
-        if isinstance(obj, np.floating):
-            return float(obj)
-        if isinstance(obj, bytes):
-            return obj.decode('utf8')
-        return json.JSONEncoder.default(self, obj)
-
-@app.get('/hello')
-def hello():
-    """Test endpoint"""
-    return {'hello': 'world'}
-
-@app.post("/index/")
-def register(file: UploadFile = File(...)):
-    file_name = UPLOAD_DIR + file.filename
-    with open(file_name, 'wb') as f:
-        f.write(file.file.read())
-    print(file_name)
-
-    file_extension = os.path.splitext(file_name)[1]
-    print(file_extension, "file_ext")
-    djv.fingerprint_directory(UPLOAD_DIR, [file_extension])
-    # djv.fingerprint_file(str(file_name))
-    os.remove(file_name)
-    return True
-
-@app.post("/find/")
-def post(file: UploadFile = File(...)):
-    file_name = UPLOAD_DIR + file.filename
-    with open(file_name, 'wb') as f:
-        f.write(file.file.read())
-    results = djv.recognize(FileRecognizer, file_name)
-    os.remove(file_name)
-    print(results)
-    return json.dumps(results, cls=NumpyEncoder)
+def update_state(file):
+    payload = {
+        'topic_name': globals.RECEIVE_TOPIC,
+        'client_id': globals.CLIENT_ID,
+        'value': file
+    }
+    try:
+        requests.request("POST", globals.DASHBOARD_URL,  data=payload)
+    except: 
+        print("EXCEPTION IN UPDATE STATE API CALL......")
 
 
- 
+if __name__ == "__main__":
+    print('main fxn')
+    print("Connected to Kafka at " + globals.KAFKA_HOSTNAME + ":" + globals.KAFKA_PORT)
+    print("Kafka Consumer topic for this Container is " + globals.RECEIVE_TOPIC)
+    for message in init.consumer_obj:
+        message = message.value
+        db_key = str(message)
+        print(db_key, 'db_key')
+        try:
+            db_object = Cache.objects.get(pk=db_key)
+        except:
+            print("EXCEPTION IN GET PK... continue")
+            continue
+
+        # file_name = db_object.file_name
+        # USING PK as file name to retrive it later in search api
+        file_name = str(db_key)
+        
+        print("#############################################")
+        print("########## PROCESSING FILE " + file_name)
+        print("#############################################")
+
+        file_path = UPLOAD_DIR + file_name
+
+        with open(file_path, 'wb') as file_to_save:
+            file_to_save.write(db_object.file.read())
+        try:
+            status = index_audio(file_path)
+            print(f"AUDIO INDEXED {status}")
+        except:
+            print("ERROR IN INDEXING")
+            continue
+        
+        print(".....................FINISHED PROCESSING FILE.....................")
+        update_state(file_name)
