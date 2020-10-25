@@ -5,21 +5,27 @@ import init
 import globals
 import os
 import requests 
+from init import ERR_LOGGER
 
 UPLOAD_DIR = "upload_dir/"
 
 global_init()
 
-def update_state(file):
+FILE_ID = ""
+
+def update_state(file_name):
     payload = {
-        'topic_name': globals.RECEIVE_TOPIC,
-        'client_id': globals.CLIENT_ID,
-        'value': file
+        'parent_name': globals.PARENT_NAME,
+        'group_name': globals.GROUP_NAME,
+        'container_name': globals.RECEIVE_TOPIC,
+        'file_name': file_name,
+        'client_id': globals.CLIENT_ID
     }
     try:
         requests.request("POST", globals.DASHBOARD_URL,  data=payload)
-    except: 
-        print("EXCEPTION IN UPDATE STATE API CALL......")
+    except Exception as e:
+        print(f"{e} EXCEPTION IN UPDATE STATE API CALL......")
+        ERR_LOGGER(f"{e} EXCEPTION IN UPDATE STATE API CALL......FILE ID {FILE_ID}")
 
 
 if __name__ == "__main__":
@@ -32,8 +38,9 @@ if __name__ == "__main__":
         print(db_key, 'db_key')
         try:
             db_object = Cache.objects.get(pk=db_key)
-        except:
+        except Exception as e:
             print("EXCEPTION IN GET PK... continue")
+            ERR_LOGGER(f"{e} EXCEPTION IN GET PK... continue")
             continue
 
         db_file_name = db_object.file_name
@@ -52,8 +59,9 @@ if __name__ == "__main__":
         try:
             status = index_audio(file_path)
             print(f"AUDIO INDEXED {status}")
-        except:
-            print("ERROR IN INDEXING")
+        except Exception as e:
+            print(f"{e} ERROR IN INDEXING")
+            ERR_LOGGER(f"{e} ERROR IN INDEXING")
             continue
         
         print(".....................FINISHED PROCESSING FILE.....................")
