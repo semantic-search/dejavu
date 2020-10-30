@@ -11,5 +11,7 @@ WORKDIR /app
 COPY requirements.txt requirements.txt
 RUN pip install -r requirements.txt
 COPY . ./
+
+RUN chmod +rwx wait-for-it.sh
 # CMD uvicorn --host=0.0.0.0 --port 8080 api:app --reload
 # CMD ["python", "main.py"]

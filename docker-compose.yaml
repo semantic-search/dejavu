@@ -28,7 +28,8 @@ services:
     build:
       context: ./
       dockerfile: ./docker/python/Dockerfile
-    command: python main.py
+    command: >
+      sh -c "/app/wait-for-it.sh api:8080 -- python -u main.py"    
     env_file:
       - .env
     volumes:
